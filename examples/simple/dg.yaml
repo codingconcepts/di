@@ -1,0 +1,18 @@
+tables:
+
+  - name: customer
+    count: 100000
+    unique_columns: [email]
+    columns:
+      - name: id
+        type: gen
+        processor:
+          value: ${uuid}
+      - name: email
+        type: gen
+        processor:
+          value: ${email}
+      - name: crdb_region
+        type: set
+        processor:
+          values: [aws-us-east-1, aws-eu-central-1, aws-ap-southeast-1]
