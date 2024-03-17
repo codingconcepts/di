@@ -26,13 +26,10 @@ func main() {
 	table := flag.String("table", "", "name of the table to import into")
 	batchSize := flag.Int("batch", 10000, "import batch size")
 
-	var formatHelpers flags.StringSlice
-	flag.Var(&formatHelpers, "fmt", "format helper (in the form of column_name:format)")
+	formatHelpers := flags.NewStringSlice()
+	flag.Var(formatHelpers, "fmt", "format helper (in the form of data_type:format)")
 
 	flag.Parse()
-
-	*url = "postgres://root@localhost:26257/store?sslmode=disable"
-	*file = "examples/simple/csvs/customer.csv"
 
 	if *file == "" || *url == "" {
 		flag.Usage()
@@ -62,9 +59,7 @@ func main() {
 		log.Fatalf("error fetching table information: %v", err)
 	}
 
-	addFormatters(types, formatHelpers)
-
-	runner := runner.New(db, *table, types, *batchSize)
+	runner := runner.New(db, *table, types, *batchSize, formatHelpers)
 
 	csv, err := os.Open(*file)
 	if err != nil {
@@ -106,7 +101,7 @@ func fetchTableInformation(db *pgxpool.Pool, schema, table string) (model.Column
 
 		types[c.Name] = &c
 
-		log.Printf(" %d. %s (%s)%s", c.Ordinal, c.Name, c.Type, lo.Ternary(c.Nullable, "- NULL", ""))
+		log.Printf(" %d. %s (%s)%s", c.Ordinal, c.Name, c.Type, lo.Ternary(c.Nullable, " - NULL", ""))
 	}
 
 	if len(types) == 0 {
@@ -114,21 +109,4 @@ func fetchTableInformation(db *pgxpool.Pool, schema, table string) (model.Column
 	}
 
 	return types, nil
-}
-
-func addFormatters(columns model.ColumnTypes, formatters flags.StringSlice) error {
-	for _, f := range formatters {
-		parts := strings.Split(f, ":")
-		name := parts[0]
-		format := parts[1]
-
-		c, ok := columns[name]
-		if !ok {
-			return fmt.Errorf("missing column for formatter: %q", f)
-		}
-
-		c.Format = format
-	}
-
-	return nil
 }

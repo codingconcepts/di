@@ -1,0 +1,64 @@
+tables:
+
+  - name: example
+    count: 1000
+    unique_columns: [string]
+    columns:
+
+      - name: uuid
+        type: gen
+        processor:
+          value: ${uuid}
+
+      - name: string
+        type: gen
+        processor:
+          value: ${email}
+
+      - name: date
+        type: gen
+        processor:
+          value: ${date}
+          format: 2006-01-02
+
+      - name: time
+        type: gen
+        processor:
+          value: ${date}
+          format: 15:04:05
+
+      - name: timestamptz
+        type: gen
+        processor:
+          value: ${date}
+          format: 2006-01-02T15:04:05
+
+      - name: int2
+        type: gen
+        processor:
+          value: ${int16}
+
+      - name: int4
+        type: gen
+        processor:
+          value: ${int32}
+
+      - name: int8
+        type: gen
+        processor:
+          value: ${int64}
+
+      - name: bool
+        type: gen
+        processor:
+          value: ${bool}
+
+      - name: float
+        type: gen
+        processor:
+          value: ${float32}
+
+      - name: decimal
+        type: gen
+        processor:
+          value: ${float64}

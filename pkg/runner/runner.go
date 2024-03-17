@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/codingconcepts/di/pkg/flags"
 	"github.com/codingconcepts/di/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -16,18 +17,20 @@ import (
 
 // Runner holds the runtime properties of the application.
 type Runner struct {
-	db        *pgxpool.Pool
-	table     string
-	types     model.ColumnTypes
-	batchSize int
+	db            *pgxpool.Pool
+	table         string
+	types         model.ColumnTypes
+	formatHelpers map[string]string
+	batchSize     int
 }
 
-func New(db *pgxpool.Pool, table string, types model.ColumnTypes, batchSize int) *Runner {
+func New(db *pgxpool.Pool, table string, types model.ColumnTypes, batchSize int, formatHelpers *flags.StringSlice) *Runner {
 	return &Runner{
-		db:        db,
-		table:     table,
-		types:     types,
-		batchSize: batchSize,
+		db:            db,
+		table:         table,
+		types:         types,
+		batchSize:     batchSize,
+		formatHelpers: formatHelpers.ToMap(),
 	}
 }
 
@@ -69,7 +72,7 @@ func (runner *Runner) StreamCSV(r io.ReadSeeker) error {
 			return fmt.Errorf("reading csv file: %w", err)
 		}
 
-		args, err := csvLineToArgs(header, record, runner.types)
+		args, err := runner.csvLineToArgs(header, record)
 		if err != nil {
 			return fmt.Errorf("converting csv line to argsL %w", err)
 		}

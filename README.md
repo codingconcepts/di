@@ -13,6 +13,23 @@ cockroach demo \
   --insecure
 ```
 
+CRDB Data Types
+
+``` sh
+cockroach sql \
+  --url "postgres://root@localhost:26257?sslmode=disable" \
+  --file examples/crdb_data_types/create.sql
+
+dg -c examples/crdb_data_types/dg.yaml -o examples/crdb_data_types/csvs
+
+go run di.go \
+  --url "postgres://root@localhost:26257?sslmode=disable" \
+  --file examples/crdb_data_types/csvs/example.csv \
+  --fmt date:2006-01-02 \
+  --fmt time:15:04:05
+```
+2006-01-02T
+
 Simple
 
 ``` sh
@@ -42,3 +59,9 @@ WHERE table_name = 'customer'
 AND table_schema = 'public'
 ORDER BY ordinal_position;
 ```
+
+### Todo
+
+* Unit tests
+* Documentation
+* Binaries
