@@ -1,7 +1,7 @@
 tables:
 
   - name: example
-    count: 1000
+    count: 100000
     unique_columns: [string]
     columns:
 

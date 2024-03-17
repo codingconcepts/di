@@ -24,9 +24,7 @@ dg -c examples/crdb_data_types/dg.yaml -o examples/crdb_data_types/csvs
 
 go run di.go \
   --url "postgres://root@localhost:26257?sslmode=disable" \
-  --file examples/crdb_data_types/csvs/example.csv \
-  --fmt date:2006-01-02 \
-  --fmt time:15:04:05
+  --file examples/crdb_data_types/csvs/example.csv
 ```
 2006-01-02T
 
