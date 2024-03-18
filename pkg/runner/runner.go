@@ -2,7 +2,6 @@ package runner
 
 import (
 	"bufio"
-	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/codingconcepts/di/pkg/flags"
 	"github.com/codingconcepts/di/pkg/model"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/samber/lo"
 )
@@ -58,6 +56,11 @@ func (runner *Runner) StreamCSV(r io.ReadSeeker) error {
 		return fmt.Errorf("validating columns: %w", err)
 	}
 
+	// Determine ingestion mechanism based on whether there are generated columns
+	// without explicit values in the csv file.
+	ingester := createIngester(header, runner.types)
+	fmt.Printf("Ingestion mechanism: %T\n", ingester)
+
 	i := 1
 	rows := [][]any{}
 	for {
@@ -79,7 +82,7 @@ func (runner *Runner) StreamCSV(r io.ReadSeeker) error {
 		rows = append(rows, args)
 
 		if i%runner.batchSize == 0 {
-			if err = copyToDB(runner.db, runner.table, header, rows); err != nil {
+			if err = ingester.Ingest(runner.db, runner.table, header, rows); err != nil {
 				return fmt.Errorf("flushing rows: %w", err)
 			}
 
@@ -91,7 +94,7 @@ func (runner *Runner) StreamCSV(r io.ReadSeeker) error {
 	}
 
 	if len(rows) > 0 {
-		if err = copyToDB(runner.db, runner.table, header, rows); err != nil {
+		if err = ingester.Ingest(runner.db, runner.table, header, rows); err != nil {
 			return fmt.Errorf("flushing rows: %w", err)
 		}
 	}
@@ -106,12 +109,27 @@ func validateColumns(headers []string, types model.ColumnTypes) error {
 			return h == name
 		})
 
-		if !ok && !c.Nullable {
+		if !ok && !c.Nullable && !c.IsGenerated {
 			return fmt.Errorf("missing non-nullable column %q", name)
 		}
 	}
 
 	return nil
+}
+
+func createIngester(headers []string, types model.ColumnTypes) model.Ingester {
+	for name, c := range types {
+		// Find header and if missing (and type is generated) batch insert.
+		_, ok := lo.Find(headers, func(h string) bool {
+			return h == name
+		})
+
+		if !ok && c.IsGenerated {
+			return &model.BatchInsertIngester{}
+		}
+	}
+
+	return &model.CopyFromIntester{}
 }
 
 func fileLines(r io.Reader) (int, error) {
@@ -126,15 +144,4 @@ func fileLines(r io.Reader) (int, error) {
 	}
 
 	return lines, nil
-}
-
-func copyToDB(db *pgxpool.Pool, table string, header []string, rows [][]any) error {
-	_, err := db.CopyFrom(
-		context.Background(),
-		pgx.Identifier{table},
-		header,
-		pgx.CopyFromRows(rows),
-	)
-
-	return err
 }

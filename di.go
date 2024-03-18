@@ -73,15 +73,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("error opening csv file for reading: %v", err)
 	}
-	defer csv.Close()
+	defer func() {
+		if err = csv.Close(); err != nil {
+			log.Fatalf("error closing csv file %v", err)
+		}
+	}()
 
 	if err = runner.StreamCSV(csv); err != nil {
 		log.Fatalf("error streaming csv to database: %v", err)
 	}
+
+	log.Println("\n Finished")
 }
 
 func fetchTableInformation(db *pgxpool.Pool, schema, table string) (model.ColumnTypes, error) {
-	const stmt = `SELECT ordinal_position, column_name, udt_name, is_nullable
+	const stmt = `SELECT ordinal_position, column_name, udt_name, is_nullable, is_generated
 								FROM information_schema.columns
 								WHERE table_name = $1
 								AND table_schema = $2
@@ -100,16 +106,25 @@ func fetchTableInformation(db *pgxpool.Pool, schema, table string) (model.Column
 	for rows.Next() {
 		var c model.Column
 		var rawNullable string
+		var rawGenerated string
 
-		if err = rows.Scan(&c.Ordinal, &c.Name, &c.Type, &rawNullable); err != nil {
+		if err = rows.Scan(&c.Ordinal, &c.Name, &c.Type, &rawNullable, &rawGenerated); err != nil {
 			return nil, fmt.Errorf("scanning column information: %w", err)
 		}
 
 		c.Nullable = strings.EqualFold(rawNullable, "YES")
+		c.IsGenerated = strings.EqualFold(rawGenerated, "ALWAYS")
 
 		types[c.Name] = &c
 
-		log.Printf(" %d. %s (%s)%s", c.Ordinal, c.Name, c.Type, lo.Ternary(c.Nullable, " - NULL", ""))
+		log.Printf(
+			" %d. %s (%s)%s%s",
+			c.Ordinal,
+			c.Name,
+			c.Type,
+			lo.Ternary(c.Nullable, " - NULL", ""),
+			lo.Ternary(c.IsGenerated, " - GENERATED", ""),
+		)
 	}
 
 	if len(types) == 0 {

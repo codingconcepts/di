@@ -1,0 +1,30 @@
+tables:
+
+  - name: example
+    count: 20000
+    columns:
+
+      - name: uuid
+        type: gen
+        processor:
+          value: ${uuid}
+
+      - name: market
+        type: set
+        processor:
+          values:
+            - 'de'
+            - 'es'
+            - 'fr'
+            - 'ie'
+            - 'uk'
+            - 'br'
+            - 'bs'
+            - 'co'
+            - 'mx'
+            - 'us'
+            - 'hk'
+            - 'in'
+            - 'ja'
+            - 'my'
+            - 'sg'

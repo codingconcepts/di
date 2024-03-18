@@ -5,8 +5,9 @@ type ColumnTypes map[string]*Column
 
 // Column represents the properties of a table column.
 type Column struct {
-	Ordinal  int
-	Name     string
-	Type     string
-	Nullable bool
+	Ordinal     int
+	Name        string
+	Type        string
+	Nullable    bool
+	IsGenerated bool
 }

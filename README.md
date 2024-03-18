@@ -34,6 +34,8 @@ Usage of di:
 
 ### Examples
 
+#### All CockroachDB data types
+
 Create cluster
 
 ``` sh
@@ -60,6 +62,52 @@ Import data using di
 di \
   --url "postgres://root@localhost:26257?sslmode=disable" \
   --file examples/crdb_data_types/csvs/example.csv
+```
+
+##### Generated columns
+
+Create cluster
+
+``` sh
+cockroach demo \
+  --demo-locality region=aws-us-east-1:region=aws-eu-central-1:region=aws-ap-southeast-1 \
+  --nodes 3 \
+  --no-example-database \
+  --insecure
+```
+
+Create database and table
+
+``` sh
+cockroach sql \
+  --url "postgres://root@localhost:26257?sslmode=disable" \
+  --file examples/generated_columns/create.sql
+```
+
+Generate data (using [dg](http://github.com/codingconcepts/dg))
+
+``` sh
+dg -c examples/generated_columns/dg.yaml -o examples/generated_columns/csvs
+```
+
+Import data using di
+
+``` sh
+di \
+  --url "postgres://root@localhost:26257/example?sslmode=disable" \
+  --file examples/generated_columns/csvs/example.csv
+```
+
+### Helpful statements
+
+CockroachDB column type fetch
+
+``` sql
+SELECT ordinal_position, column_name, udt_name, is_nullable, is_generated
+FROM information_schema.columns
+WHERE table_name = 'example'
+AND table_schema = 'public'
+ORDER BY ordinal_position;
 ```
 
 ### Todo
