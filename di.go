@@ -87,7 +87,13 @@ func main() {
 }
 
 func fetchTableInformation(db *pgxpool.Pool, schema, table string) (model.ColumnTypes, error) {
-	const stmt = `SELECT ordinal_position, column_name, udt_name, is_nullable, is_generated
+	const stmt = `SELECT
+									ordinal_position,
+									column_name,
+									udt_name,
+									is_nullable,
+									is_generated,
+									COALESCE(column_default, '')
 								FROM information_schema.columns
 								WHERE table_name = $1
 								AND table_schema = $2
@@ -107,23 +113,26 @@ func fetchTableInformation(db *pgxpool.Pool, schema, table string) (model.Column
 		var c model.Column
 		var rawNullable string
 		var rawGenerated string
+		var defaultValue string
 
-		if err = rows.Scan(&c.Ordinal, &c.Name, &c.Type, &rawNullable, &rawGenerated); err != nil {
+		if err = rows.Scan(&c.Ordinal, &c.Name, &c.Type, &rawNullable, &rawGenerated, &defaultValue); err != nil {
 			return nil, fmt.Errorf("scanning column information: %w", err)
 		}
 
 		c.Nullable = strings.EqualFold(rawNullable, "YES")
 		c.IsGenerated = strings.EqualFold(rawGenerated, "ALWAYS")
+		c.HasDefault = defaultValue != ""
 
 		types[c.Name] = &c
 
 		log.Printf(
-			" %d. %s (%s)%s%s",
+			" %d. %s (%s)%s%s%s",
 			c.Ordinal,
 			c.Name,
 			c.Type,
 			lo.Ternary(c.Nullable, " - NULL", ""),
 			lo.Ternary(c.IsGenerated, " - GENERATED", ""),
+			lo.Ternary(c.IsGenerated, " - DEFAULT", ""),
 		)
 	}
 

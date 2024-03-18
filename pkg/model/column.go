@@ -10,4 +10,5 @@ type Column struct {
 	Type        string
 	Nullable    bool
 	IsGenerated bool
+	HasDefault  bool
 }

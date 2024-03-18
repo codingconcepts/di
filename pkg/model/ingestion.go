@@ -17,9 +17,9 @@ type Ingester interface {
 
 // CopyFromIngester is an implementation of Ingester that ingests data
 // by way of the COPY FROM mechanism.
-type CopyFromIntester struct{}
+type CopyFromIngester struct{}
 
-func (i *CopyFromIntester) Ingest(db *pgxpool.Pool, table string, header []string, rows [][]any) error {
+func (i *CopyFromIngester) Ingest(db *pgxpool.Pool, table string, header []string, rows [][]any) error {
 	_, err := db.CopyFrom(
 		context.Background(),
 		pgx.Identifier{table},

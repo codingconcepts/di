@@ -32,9 +32,7 @@ Usage of di:
         display version information
 ```
 
-### Examples
-
-#### All CockroachDB data types
+### Example
 
 Create cluster
 
@@ -47,13 +45,13 @@ Create database and table
 ``` sh
 cockroach sql \
   --url "postgres://root@localhost:26257?sslmode=disable" \
-  --file examples/crdb_data_types/create.sql
+  --file example/create.sql
 ```
 
 Generate data (using [dg](http://github.com/codingconcepts/dg))
 
 ``` sh
-dg -c examples/crdb_data_types/dg.yaml -o examples/crdb_data_types/csvs
+dg -c example/dg.yaml -o example/csvs
 ```
 
 Import data using di
@@ -61,41 +59,7 @@ Import data using di
 ``` sh
 di \
   --url "postgres://root@localhost:26257?sslmode=disable" \
-  --file examples/crdb_data_types/csvs/example.csv
-```
-
-##### Generated columns
-
-Create cluster
-
-``` sh
-cockroach demo \
-  --demo-locality region=aws-us-east-1:region=aws-eu-central-1:region=aws-ap-southeast-1 \
-  --nodes 3 \
-  --no-example-database \
-  --insecure
-```
-
-Create database and table
-
-``` sh
-cockroach sql \
-  --url "postgres://root@localhost:26257?sslmode=disable" \
-  --file examples/generated_columns/create.sql
-```
-
-Generate data (using [dg](http://github.com/codingconcepts/dg))
-
-``` sh
-dg -c examples/generated_columns/dg.yaml -o examples/generated_columns/csvs
-```
-
-Import data using di
-
-``` sh
-di \
-  --url "postgres://root@localhost:26257/example?sslmode=disable" \
-  --file examples/generated_columns/csvs/example.csv
+  --file example/csvs/example.csv
 ```
 
 ### Helpful statements
@@ -103,7 +67,13 @@ di \
 CockroachDB column type fetch
 
 ``` sql
-SELECT ordinal_position, column_name, udt_name, is_nullable, is_generated
+SELECT
+  ordinal_position,
+  column_name,
+  udt_name,
+  is_nullable,
+  is_generated,
+  COALESCE(column_default, '')
 FROM information_schema.columns
 WHERE table_name = 'example'
 AND table_schema = 'public'

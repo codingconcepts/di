@@ -109,7 +109,7 @@ func validateColumns(headers []string, types model.ColumnTypes) error {
 			return h == name
 		})
 
-		if !ok && !c.Nullable && !c.IsGenerated {
+		if !ok && !c.Nullable && !c.IsGenerated && !c.HasDefault {
 			return fmt.Errorf("missing non-nullable column %q", name)
 		}
 	}
@@ -129,7 +129,7 @@ func createIngester(headers []string, types model.ColumnTypes) model.Ingester {
 		}
 	}
 
-	return &model.CopyFromIntester{}
+	return &model.CopyFromIngester{}
 }
 
 func fileLines(r io.Reader) (int, error) {
