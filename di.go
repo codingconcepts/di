@@ -17,6 +17,8 @@ import (
 	"github.com/samber/lo"
 )
 
+var version string
+
 func main() {
 	log.SetFlags(0)
 
@@ -25,11 +27,17 @@ func main() {
 	schema := flag.String("schema", "public", "schema in which your table resides")
 	table := flag.String("table", "", "name of the table to import into")
 	batchSize := flag.Int("batch", 10000, "import batch size")
+	displayVersion := flag.Bool("version", false, "display version information")
 
 	formatHelpers := flags.NewStringSlice()
 	flag.Var(formatHelpers, "fmt", "format helper (in the form of data_type:format)")
 
 	flag.Parse()
+
+	if *displayVersion {
+		log.Println(version)
+		os.Exit(0)
+	}
 
 	if *file == "" || *url == "" {
 		flag.Usage()

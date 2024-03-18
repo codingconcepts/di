@@ -17,7 +17,7 @@ func NewStringSlice() *StringSlice {
 }
 
 func (i *StringSlice) String() string {
-	return strings.Join(*i, "\n")
+	return strings.Join(*i, ", ")
 }
 
 func (i *StringSlice) Set(value string) error {
