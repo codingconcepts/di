@@ -37,60 +37,31 @@ Usage of di:
 Create cluster
 
 ``` sh
-cockroach demo \
-  --demo-locality region=aws-us-east-1:region=aws-eu-central-1:region=aws-ap-southeast-1 \
-  --nodes 3 \
-  --no-example-database \
-  --insecure
+cockroach demo --insecure --no-example-database
 ```
 
-CRDB Data Types
+Create database and table
 
 ``` sh
 cockroach sql \
   --url "postgres://root@localhost:26257?sslmode=disable" \
   --file examples/crdb_data_types/create.sql
-
-dg -c examples/crdb_data_types/dg.yaml -o examples/crdb_data_types/csvs
-
-go run di.go \
-  --url "postgres://root@localhost:26257?sslmode=disable" \
-  --file examples/crdb_data_types/csvs/example.csv
 ```
-2006-01-02T
 
-Simple
+Generate data (using [dg](http://github.com/codingconcepts/dg))
 
 ``` sh
-cockroach sql \
-  --url "postgres://root@localhost:26257?sslmode=disable" \
-  --file examples/simple/create.sql
-
-dg -c examples/simple/dg.yaml -o examples/simple/csvs
-
-go run di.go \
-  --url "postgres://root@localhost:26257/store?sslmode=disable" \
-  --file examples/simple/csvs/customer.csv
-
-go run di.go \
-  --url "postgres://root@localhost:26257/store?sslmode=disable" \
-  --file examples/simple/csvs/stock.csv
+dg -c examples/crdb_data_types/dg.yaml -o examples/crdb_data_types/csvs
 ```
 
-### Debugging
+Import data using di
 
-Query to fetch column types in CockroachDB
-
-``` sql
-SELECT ordinal_position, column_name, udt_name, is_nullable
-FROM information_schema.columns
-WHERE table_name = 'customer'
-AND table_schema = 'public'
-ORDER BY ordinal_position;
+``` sh
+di \
+  --url "postgres://root@localhost:26257?sslmode=disable" \
+  --file examples/crdb_data_types/csvs/example.csv
 ```
 
 ### Todo
 
 * Unit tests
-* Documentation
-* Binaries
